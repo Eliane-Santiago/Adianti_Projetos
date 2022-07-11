@@ -22,10 +22,10 @@ class FormularioTeste extends TPage
         $email = new TEntry('email');
         $codigo->setEditable(false); //Desabilitando a edição do campo
 
-        //$nome->setValue('Teste'); // Usar quando quiser deixar campo que informações permanentes (Defauld)
+        $nome->setValue('Teste'); // Usar quando quiser deixar campo que informações permanentes (Defauld)
 
         //Adicionando os campos na tela
-        // $this->form->addFields([Tlabel], [Input]); 
+        //$this->form->addFields([Tlabel], [Input]); 
         //$this->form->addFields([NOME], [CAMPO]);
         $this->form->addFields([new TLabel('Código')], [$codigo]);
         $this->form->addFields([new TLabel('Nome')], [$nome]);
@@ -42,7 +42,9 @@ class FormularioTeste extends TPage
         //Criando o botão Forma 2
         $this->form->addAction('Salvar', new TAction([$this, 'onSave']), 'fa:save green'); // Validar o formulário
         $this->form->addActionLink('Limpar', new TAction([$this, 'onClear']), 'fa:eraser red'); // não validar o formulário
-
+        $this->form->addActionLink('Editar', new TAction([$this, 'onEdit']), 'fa:edit blue'); // não validar o formulário
+        $this->form->addActionLink('Listar', new TAction([$this, 'onList']), 'fa:list pink'); // não validar o formulário
+        
 
         //Adicionando o Formulario na tela
         parent::add($this->form); 
@@ -103,12 +105,12 @@ class FormularioTeste extends TPage
               {
                 $key = $param['codigo'];
                 $cliente = new Cliente($key);
-                $this-form->setData($cliente);
+                $this->form->setData($cliente);
 
               } 
               else
                 {
-                    $this->form-clear(true);
+                    //$this->form->clear(true);
                 }
 
 
@@ -121,6 +123,51 @@ class FormularioTeste extends TPage
         }
     }
 
+    //Método Listar
+    public function onList($param)
+    {
+
+        try
+        {
+
+            TTransaction::open('adianti_cadastro'); //Abrindo a conexão com o bd
+
+            $conn = TTransaction::get(); // pegar dados
+
+            //var_dump(TTransaction::getDatabaseInfo()); //Retorna as informações do Banco de Dados que está sendo usado
+            //var_dump(TTransaction::getDatabase()); //Retorna só o nome do BD que está sendo usado
+             
+            /*
+            //Listando Objetos - Consulta Simples
+            $result = $conn->query('SELECT codigo, nome FROM cliente ORDER BY codigo');
+
+            foreach ($result as $row)
+            {
+                 print $row['codigo'].'-'.
+                       $row['nome']."<br>\n";
+            }
+            */
+
+            $statement = $conn->prepare('SELECT codigo, nome FROM cliente WHERE codigo >= ? AND codigo <= ?'); //? -> é uma variável
+            $statement->execute([1,20]);
+            //$statement->execute([1, $_GET['nome']]); //Pegar informações da tela (NÃO DEU CERTO)
+            $result=$statement->fetchAll();
+
+            foreach ($result as $row)
+            {
+                 print $row['codigo'].'-'.
+                       $row['nome']."<br>\n";
+            }
+
+            TTransaction::close();
+        }
+        catch(Exception $e)
+        {
+            new TMessage('error', $e->getMessage());
+           //TTransaction::rollbaack();
+        }
+
+    }
 
 
 

@@ -67,14 +67,8 @@ class FormularioCadastro extends TPage
         $table2->addRowSet( new TLabel('Número'), $numero );
         $table2->addRowSet( new TLabel('Complemento'), $completo );
         $table2->addRowSet( new TLabel('Bairro'), $bairro );
-        
-        /*
-        //Criando o botão Forma 1
-        $botao = new TButton('enviar');
-        $botao->setAction( new TAction( [$this, 'onSend']), 'Enviar');
-        $botao->setImage('fa:save');
-        */
 
+        
         //Criando o botão Forma 1
         $botaoSalvar = new TButton('salvar');
         $botaoSalvar->setAction( new TAction( [$this, 'onSave']), 'Salvar'); // Validar o formulário
@@ -83,70 +77,52 @@ class FormularioCadastro extends TPage
         $botaoLimpar = new TButton('limpar');
         $botaoLimpar->setAction( new TAction( [$this, 'onClear']), 'Limpar'); // não validar o formulário
         $botaoLimpar->setImage('fa:eraser red');
+
+        $botaoEditar = new TButton('editar');
+        $botaoEditar->setAction( new TAction( [$this, 'onEdit']), 'Editar'); // não validar o formulário
+        $botaoEditar->setImage('fa:edit blue');
+
+        $botaoListar = new TButton('listar');
+        $botaoListar->setAction( new TAction( [$this, 'onList']), 'Listar'); // não validar o formulário
+        $botaoListar->setImage('fa:list pink');
         
+
         /*
-        //Criando o botão Forma 2 (NÃO FUNCIONOU)
+        //Criando o botão Forma 2 (NÃO FUNCIONOU) -> Só aceita de usar a classe BootstrapFormBuilder
         $this->form->addAction('Salvar', new TAction([$this, 'onSave']), 'fa:save green'); // Validar o formulário
         $this->form->addActionLink('Limpar', new TAction([$this, 'onClear']), 'fa:eraser red'); // não validar o formulário
+        $this->form->addActionLink('Editar', new TAction([$this, 'onEdit']), 'fa:edit blue');
+        $this->form->addActionLink('Listar', new TAction([$this, 'onList']), 'fa:list yellon');
         */
         
 
-        $this->form->setFields( [ $codigo, $nome, $rg_cnh, $cpf, $contato, $email, $logradouro, $numero, $completo, $bairro, $botaoSalvar, $botaoLimpar ] );
+        $this->form->setFields( [ $codigo, $nome, $rg_cnh, $cpf, $contato, $email, $logradouro, $numero, $completo, $bairro, $botaoSalvar, $botaoLimpar, $botaoEditar, $botaoListar ] );
+        
         
         //Validação dos campos
         $nome->addValidation('NOME', new TRequiredValidator); // informa que o campo é obrigatório
         $rg_cnh->addValidation('RG/CNH', new TRequiredValidator); // informa que o campo é obrigatório
         $cpf->addValidation('CPF', new TRequiredValidator); // informa que o campo é obrigatório
-        $nome->addValidation('NOME', new TRequiredValidator); // informa que o campo é obrigatório
-        $cpf ->addValidation('CPF', new TMaxLengthValidator, [14]); //Quantidade máximo de caractere de um campo
+        //$cpf ->addValidation('CPF', new TMaxLengthValidator, [14]); //Quantidade máximo de caractere de um campo
         //$codigo->addValidation('codigo', new TMinValueValidator, [2]); //o valor mínimo que um campo pode receber
         //$codigo->addValidation('codigo', new TMaxValueValidator, [20]); //o valor máxima que um campo pode receber
         //$codigo->addValidation('Codigo', new TMinLengthValidator, [3]); //quantidade mínimo de caractere de um campo
+    
 
         $panel = new TPanelGroup('Cadastro');
         $panel->add($this->form);
-        $panel->addFooter($botaoSalvar);
-        $panel->addFooter($botaoLimpar);
+        $panel->addFooter($botaoSalvar.$botaoLimpar.$botaoEditar.$botaoListar); // Adicionando botões ao footer
+       //$panel->addFooter($botaoLimpar); -> Se colocar essa linha código duplica o footer
         
         parent::add($panel);
 
     }
-    
-    /*
-    //Método do Botão ENVIAR
-    public function onSend($param)
-    {
-
-        try
-        {
-
-        $data = $this->form->getData();
-        
-        //$this->form->Data( $data );
-
-        $this->form->validate( );
-        
-        new TMessage('info', str_replace(',', '<br>', json_encode($data)));
-
-        echo '<pre>';
-        var_dump($data);
-        echo '</pre>';
-
-        }
-        catch(Exception $e)
-        {
-            new TMessage('error', $e->getMessage());
-        }
-
-    }
-    */ 
 
     //Método do Botão SALVAR
     public function onSave($param)
     {
 
         try{
-
             TTransaction::open('adianti_cadastro'); //Abrindo a conexão com o bd
 
             $conn = TTransaction::get(); // pegar dados
@@ -164,7 +140,9 @@ class FormularioCadastro extends TPage
 
             $this->form->setData($cliente);
 
-            //TTransaction::Tump();
+            
+
+            //var_dump(TTransaction::getDatabaseInfo()); // Informações do banco que está em execução
 
             /*
             //INSERINDO O CLIENTE MANUALMENTE
@@ -277,6 +255,9 @@ class FormularioCadastro extends TPage
             //Menssagem
             new TMessage('info','Registro Salvo com Sucesso!');
 
+
+            
+
             TTransaction::close(); //Fechando a conexão com o banco de dados
 
         } 
@@ -307,7 +288,7 @@ class FormularioCadastro extends TPage
               {
                 $key = $param['codigo'];
                 $cliente = new Cliente($key);
-                $this-form->setData($cliente);
+                $this->form->setData($cliente);
 
               } 
               else
@@ -321,9 +302,57 @@ class FormularioCadastro extends TPage
         catch (Exception $e)
         {
             new TMessage('error', $e->getMessage());
-            TTransaction::rollback();
+            //TTransaction::rollback();
         }
     }
+
+    //Método Listar
+    public function onList($param)
+    {
+
+        try
+        {
+
+            TTransaction::open('adianti_cadastro'); //Abrindo a conexão com o bd
+
+            $conn = TTransaction::get(); // pegar dados
+
+            //var_dump(TTransaction::getDatabaseInfo()); //Retorna as informações do Banco de Dados que está sendo usado
+            //var_dump(TTransaction::getDatabase()); //Retorna só o nome do BD que está sendo usado
+             
+            /*
+            //Listando Objetos - Consulta Simples
+            $result = $conn->query('SELECT codigo, nome FROM cliente ORDER BY codigo');
+
+            foreach ($result as $row)
+            {
+                 print $row['codigo'].'-'.
+                       $row['nome']."<br>\n";
+            }
+            */
+
+            $statement = $conn->prepare('SELECT codigo, nome FROM cliente WHERE codigo >= ? AND codigo <= ?'); //? -> é uma variável
+            $statement->execute([1,20]);
+            //$statement->execute([1, $_GET['nome']]); //Pegar informações da tela (NÃO DEU CERTO)
+            $result=$statement->fetchAll();
+
+            foreach ($result as $row)
+            {
+                 print $row['codigo'].'-'.
+                       $row['nome']."<br>\n";
+            }
+
+            TTransaction::close();
+        }
+        catch(Exception $e)
+        {
+            new TMessage('error', $e->getMessage());
+           //TTransaction::rollbaack();
+        }
+
+    }
+    
+
 
 
 }
