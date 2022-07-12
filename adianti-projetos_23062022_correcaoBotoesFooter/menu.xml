@@ -1,0 +1,20 @@
+<menu>
+
+  <menuitem label='Cronômetro'>
+    <icon>fa:hourglass-end fa:fw</icon>
+    <action>cronometro</action>
+  </menuitem>
+  <menuitem label='Cadastro'>
+    <icon>fa:user-circle fa:fw</icon>
+    <action>formularioCadastro</action>
+  </menuitem>
+  <menuitem label='Formulário'>
+    <icon>fa:user-circle fa:fw</icon>
+    <action>FormularioTeste</action>
+  </menuitem>
+
+
+
+
+
+</menu>
